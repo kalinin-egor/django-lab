@@ -1,23 +1,65 @@
 {% extends "blog/base.html" %}
 
-{% block title %}{{ post.title }}{% endblock %}
+{% block title %}{{ post.title }} — Digital Stories{% endblock %}
 
 {% block content %}
-<article>
+<article class="card" style="margin-bottom: 32px;">
     <header>
-        <h1>{{ post.title }}</h1>
-        <p class="meta">Published {{ post.publish }} by {{ post.author }}</p>
-        {% with tags=post.tags.all %}
-        {% if tags %}
-        <p class="tags">
-            Tags:
-            {% for tag in tags %}
-            <span>{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+        <p class="tag-pill">Публикация</p>
+        <h1 style="margin-bottom: 8px;">{{ post.title }}</h1>
+        <p class="meta">Опубликовано {{ post.publish|date:"d E Y, H:i" }} · Автор: {{ post.author.get_full_name|default:post.author.username }}</p>
+        <div style="margin-top: 12px; display:flex; gap:8px; flex-wrap:wrap;">
+            {% for tag in post.tags.all %}
+            <span class="tag-pill">#{{ tag.name }}</span>
+            {% empty %}
+            <span class="meta">Без тегов</span>
             {% endfor %}
-        </p>
-        {% endif %}
-        {% endwith %}
+        </div>
     </header>
-    {{ post.body|linebreaks }}
+    <div style="margin-top: 24px; line-height: 1.7; font-size: 1.05rem;">
+        {{ post.body|linebreaks }}
+    </div>
 </article>
+
+<section class="grid two">
+    <div class="card">
+        <h2>Комментарии читателей</h2>
+        <p class="meta">Активных записей: {{ comments|length }}</p>
+        <ul class="list-reset">
+            {% for comment in comments %}
+            <li class="list-item">
+                <header>
+                    <strong>{{ comment.name }}</strong>
+                    <span class="meta">{{ comment.created|date:"d.m.Y H:i" }}</span>
+                </header>
+                <p class="meta">{{ comment.email }}</p>
+                <p>{{ comment.body }}</p>
+            </li>
+            {% empty %}
+            <li class="empty">Ещё никто не оставил комментарий. Будьте первым!</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <aside class="card">
+        <h2>Похожие публикации</h2>
+        <p class="meta">На основе общих тегов и активности</p>
+        <ul class="list-reset">
+            {% for related in related_posts %}
+            <li class="list-item">
+                <header>
+                    <a href="{{ related.get_absolute_url }}"><strong>{{ related.title }}</strong></a>
+                    <span class="meta">{{ related.comment_count|default:0 }} обсужд.</span>
+                </header>
+                <p class="meta">{{ related.publish|date:"d.m.Y" }}</p>
+            </li>
+            {% empty %}
+            <li class="empty">Пока нет похожих материалов. Загляните в общий список постов.</li>
+            {% endfor %}
+        </ul>
+        <div class="widget-footer">
+            <a class="button" href="{% url 'blog:post_list' %}">Открыть каталог</a>
+        </div>
+    </aside>
+</section>
 {% endblock %}

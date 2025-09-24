@@ -1,28 +1,46 @@
 {% extends "blog/base.html" %}
 
-{% block title %}My blog{% endblock %}
+{% block title %}Каталог публикаций — Digital Stories{% endblock %}
 
 {% block content %}
-<h1>My blog</h1>
-{% for post in posts %}
-<article>
-    <header>
-        <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
-        <p class="meta">Published {{ post.publish }} by {{ post.author }}</p>
-        {% with tags=post.tags.all %}
-        {% if tags %}
-        <p class="tags">
-            Tags:
-            {% for tag in tags %}
-            <span>{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+<section class="card" style="margin-bottom: 28px;">
+    <h1 style="margin-bottom: 8px;">Каталог публикаций</h1>
+    <p class="meta">
+        Все материалы собраны в одном месте. Используйте фильтры по тегу и поиск в шапке, чтобы найти нужную тему.
+    </p>
+    {% if active_tag %}
+    <div style="margin-top: 12px; display:flex; gap:12px; align-items:center;">
+        <span class="tag-pill">#{{ active_tag.name }}</span>
+        <a class="button secondary" href="{% url 'blog:post_list' %}">Сбросить фильтр</a>
+    </div>
+    {% endif %}
+</section>
+
+{% if posts %}
+<section class="grid two">
+    {% for post in posts %}
+    <article class="card">
+        <header>
+            <h2 style="margin-bottom: 4px;"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
+            <p class="meta">{{ post.publish|date:"d E Y" }} · {{ post.author.get_full_name|default:post.author.username }}</p>
+        </header>
+        <p>{{ post.body|truncatewords:40 }}</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+            {% for tag in post.tags.all %}
+            <a class="tag-pill" href="{% url 'blog:post_list' %}?tag={{ tag.slug }}">#{{ tag.name }}</a>
+            {% empty %}
+            <span class="meta">Без тегов</span>
             {% endfor %}
-        </p>
-        {% endif %}
-        {% endwith %}
-    </header>
-    {{ post.body|truncatewords:30|linebreaks }}
-</article>
-{% empty %}
-<p>No posts available.</p>
-{% endfor %}
+        </div>
+        <div class="widget-footer">
+            <a class="button" href="{{ post.get_absolute_url }}">Читать подробнее</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="card empty">
+    Публикации отсутствуют. Загляните позже!
+</div>
+{% endif %}
 {% endblock %}
