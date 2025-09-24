@@ -7,6 +7,16 @@
     <header>
         <h1>{{ post.title }}</h1>
         <p class="meta">Published {{ post.publish }} by {{ post.author }}</p>
+        {% with tags=post.tags.all %}
+        {% if tags %}
+        <p class="tags">
+            Tags:
+            {% for tag in tags %}
+            <span>{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+        {% endwith %}
     </header>
     {{ post.body|linebreaks }}
 </article>
