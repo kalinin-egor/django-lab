@@ -1,0 +1,163 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Главная — Digital Stories{% endblock %}
+
+{% block content %}
+<section class="grid two" style="align-items: center; margin-bottom: 40px;">
+    <div>
+        <p class="tag-pill">Digital Stories</p>
+        <h1 style="font-size: 2.4rem; margin-bottom: 16px;">Ваше пространство для анализа цифровых трендов</h1>
+        <p style="font-size: 1.05rem; color: var(--muted-color); line-height: 1.6;">
+            Цель проекта — собрать на одной странице свежие публикации, обсуждения и темы, которые формируют цифровую повестку.
+            Главная выполняет три задачи: помогает быстро попасть к свежим материалам, показывает что активно обсуждают читатели,
+            а также выделяет выбор редакции для вдумчивого чтения.
+        </p>
+        <div style="display:flex; gap:12px; margin-top: 24px; flex-wrap: wrap;">
+            <a class="button" href="{% url 'blog:post_list' %}">Все публикации</a>
+            <a class="button secondary" href="#widget-trending">Популярные обсуждения</a>
+        </div>
+    </div>
+    <div class="card" style="background-image: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(249,115,22,0.18));">
+        <h2>Зачем сюда возвращаться?</h2>
+        <ul class="list-reset">
+            <li class="list-item">✅ Быстрый доступ к <strong>последним публикациям</strong> редакции.</li>
+            <li class="list-item">💬 Подборка тем с <strong>наибольшим числом обсуждений</strong> за последний месяц.</li>
+            <li class="list-item">⭐ Список материалов с <strong>расширенным разбором</strong> и пометкой «выбор редакции».</li>
+        </ul>
+    </div>
+</section>
+
+<section class="grid three">
+    <article class="card" id="widget-latest">
+        <header>
+            <h2>Свежие публикации</h2>
+            <p class="meta">Обновляется при каждом новом посте</p>
+        </header>
+        <ol class="list-reset" style="counter-reset: latest-counter;">
+            {% for post in latest_posts %}
+            <li class="list-item" style="counter-increment: latest-counter;">
+                <header>
+                    <a href="{{ post.get_absolute_url }}"><strong>{{ post.title }}</strong></a>
+                    <span class="meta">{{ post.publish|date:"d E Y" }}</span>
+                </header>
+                <p class="meta">Автор: {{ post.author.get_full_name|default:post.author.username }}</p>
+                <p>{{ post.body|truncatewords:22 }}</p>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+                    {% for tag in post.tags.all %}
+                        <span class="tag-pill">#{{ tag.name }}</span>
+                    {% empty %}
+                        <span class="meta">Без тегов</span>
+                    {% endfor %}
+                    <button class="button secondary" type="button" disabled>В избранное</button>
+                </div>
+            </li>
+            {% empty %}
+            <li class="empty">Пока нет опубликованных постов.</li>
+            {% endfor %}
+        </ol>
+        <div class="widget-footer">
+            <a class="button" href="{% url 'blog:post_list' %}">Перейти ко всем постам</a>
+        </div>
+    </article>
+
+    <article class="card" id="widget-trending">
+        <header>
+            <h2>Самые обсуждаемые</h2>
+            <p class="meta">Последние 30 дней, сортировка по активным комментариям</p>
+        </header>
+        <ol class="list-reset">
+            {% for post in trending_posts %}
+            <li class="list-item">
+                <header>
+                    <a href="{{ post.get_absolute_url }}"><strong>{{ post.title }}</strong></a>
+                    <span class="meta">{{ post.comment_count }} обсужд.</span>
+                </header>
+                <p class="meta">Опубликовано {{ post.publish|date:"d.m.Y" }} — {{ post.author.get_full_name|default:post.author.username }}</p>
+                <p>{{ post.body|truncatewords:20 }}</p>
+                <a class="button" style="margin-top: 8px;" href="{{ post.get_absolute_url }}">Читать и обсуждать</a>
+            </li>
+            {% empty %}
+            <li class="empty">Нет активных обсуждений в выбранном периоде.</li>
+            {% endfor %}
+        </ol>
+        <div class="widget-footer">
+            <a class="meta" href="{% url 'blog:post_list' %}">Смотреть архив публикаций →</a>
+        </div>
+    </article>
+
+    <article class="card" id="widget-editors">
+        <header>
+            <h2>Выбор редакции</h2>
+            <p class="meta">Материалы с высоким откликом или специальными тегами</p>
+        </header>
+        <ol class="list-reset">
+            {% for post in editors_choice %}
+            <li class="list-item">
+                <header>
+                    <a href="{{ post.get_absolute_url }}"><strong>{{ post.title }}</strong></a>
+                    <span class="meta">{{ post.publish|date:"d.m" }}</span>
+                </header>
+                <p class="meta">Комментариев: {{ post.comment_count|default:"0" }}</p>
+                <p>{{ post.body|truncatewords:24 }}</p>
+            </li>
+            {% empty %}
+            <li class="empty">Редакция пока не отметила материалы. Возвращайтесь позже!</li>
+            {% endfor %}
+        </ol>
+        <div class="widget-footer">
+            <a class="button secondary" href="{% url 'blog:post_list' %}">Открыть ленту</a>
+        </div>
+    </article>
+</section>
+
+<section class="grid two" style="margin-top:40px;">
+    <article class="card">
+        <header>
+            <h2>Популярные теги</h2>
+            <p class="meta">Сколько публикаций с каждым тегом и когда выходил последний материал</p>
+        </header>
+        <ul class="list-reset">
+            {% for tag in top_tags %}
+            <li class="list-item">
+                <header>
+                    <span><strong>#{{ tag.name }}</strong></span>
+                    <span class="meta">{{ tag.published_posts }} постов</span>
+                </header>
+                <p class="meta">
+                    Последняя публикация:
+                    {% if tag.latest_publish %}
+                        {{ tag.latest_publish|date:"d E Y" }}
+                    {% else %}
+                        пока нет
+                    {% endif %}
+                </p>
+                <a class="button" href="{% url 'blog:post_list' %}?tag={{ tag.slug }}">Открыть подборку</a>
+            </li>
+            {% empty %}
+            <li class="empty">Теги ещё не использовались.</li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="card">
+        <header>
+            <h2>Активные читатели</h2>
+            <p class="meta">По числу оставленных комментариев</p>
+        </header>
+        <ul class="list-reset">
+            {% for commenter in active_commenters %}
+            <li class="list-item">
+                <header>
+                    <strong>{{ commenter.name }}</strong>
+                    <span class="meta">{{ commenter.comments_total }} сообщений</span>
+                </header>
+                <p class="meta">Email: {{ commenter.email }}<br>Последний комментарий: {{ commenter.recent_comment|date:"d.m.Y H:i" }}</p>
+                <button class="button" type="button" disabled>Пригласить к коллаборации</button>
+            </li>
+            {% empty %}
+            <li class="empty">Пока нет комментариев.</li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}

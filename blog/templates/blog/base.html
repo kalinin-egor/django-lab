@@ -1,16 +1,266 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Блог{% endblock %}</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg-color: #f5f7fb;
+            --text-color: #1f2937;
+            --primary-color: #3b82f6;
+            --secondary-color: #f97316;
+            --card-bg: #ffffffcc;
+            --border-color: #e2e8f0;
+            --muted-color: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #eef2ff 0%, #fdfcfb 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover,
+        a:focus {
+            text-decoration: underline;
+        }
+
+        header {
+            background: #fff;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            gap: 16px;
+        }
+
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            font-weight: 500;
+        }
+
+        .search {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            min-width: 220px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: none;
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .button.secondary {
+            background: var(--secondary-color);
+        }
+
+        main {
+            padding: 32px 0 64px;
+        }
+
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 28px 0;
+            background: #fff;
+            margin-top: 48px;
+        }
+
+        footer p {
+            margin: 0;
+            color: var(--muted-color);
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid.two {
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+
+        .grid.three {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+
+        .card {
+            padding: 24px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 20px 45px -25px rgba(15, 23, 42, 0.4);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+
+        .meta {
+            color: var(--muted-color);
+            font-size: 0.9rem;
+        }
+
+        .list-reset {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .list-item {
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(226, 232, 240, 0.7);
+        }
+
+        .list-item header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: baseline;
+        }
+
+        .tag-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary-color);
+            font-size: 0.85rem;
+            margin-right: 8px;
+        }
+
+        .widget-footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .empty {
+            color: var(--muted-color);
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-links {
+                justify-content: space-between;
+            }
+
+            .search {
+                width: 100%;
+            }
+
+            .search-input {
+                flex: 1;
+                width: 100%;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div id="content">
-        {% block content %}{% endblock %}
-    </div>
-    <div id="sidebar">
-        <h2>My blog</h2>
-        <p>Welcome to the sample Django blog application.</p>
-    </div>
+    <header>
+        <div class="shell nav">
+            <a class="brand" href="{% url 'blog:home' %}">
+                <span>Б</span>
+                Digital Stories
+            </a>
+            <nav class="nav-links">
+                <a href="{% url 'blog:home' %}">Главная</a>
+                <a href="{% url 'blog:post_list' %}">Публикации</a>
+                <a href="{% url 'admin:index' %}">Админка</a>
+            </nav>
+            <form class="search" method="get" action="{% url 'blog:search' %}">
+                {{ search_form.q }}
+                <button class="button" type="submit">Найти</button>
+            </form>
+        </div>
+    </header>
+    <main>
+        <div class="shell">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    <footer>
+        <div class="shell">
+            <p>© {% now "Y" %} Digital Stories. Учебный проект на Django.</p>
+        </div>
+    </footer>
 </body>
 </html>

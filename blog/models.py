@@ -1,7 +1,34 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Count, Max, Q
 from django.urls import reverse
 from django.utils import timezone
+
+
+class PostStatus(models.TextChoices):
+    DRAFT = 'DF', 'Черновик'
+    PUBLISHED = 'PB', 'Опубликован'
+
+
+class TagQuerySet(models.QuerySet):
+    def with_post_counts(self):
+        return self.annotate(
+            published_posts=Count(
+                'posts',
+                filter=Q(posts__status=PostStatus.PUBLISHED),
+                distinct=True,
+            )
+        )
+
+    def with_latest_publish(self):
+        return self.annotate(
+            latest_publish=Max(
+                'posts__publish',
+                filter=Q(posts__status=PostStatus.PUBLISHED),
+            )
+        )
 
 
 class Tag(models.Model):
@@ -16,21 +43,70 @@ class Tag(models.Model):
             models.Index(fields=('name',), name='blog_tag_name_idx'),
         ]
 
+    objects = TagQuerySet.as_manager()
+
     def __str__(self) -> str:
         return self.name
 
 
-class PublishedManager(models.Manager):
+class PostQuerySet(models.QuerySet):
+    """Набор запросов с бизнес-логикой для работы с постами блога."""
+
+    def published(self):
+        return self.filter(status=Post.Status.PUBLISHED)
+
+    def with_comment_counts(self):
+        return self.annotate(
+            comment_count=Count(
+                'comments',
+                filter=Q(comments__active=True),
+                distinct=True,
+            )
+        )
+
+    def trending(self, days=30, min_comments=1):
+        threshold_date = timezone.now() - timedelta(days=days)
+        return (
+            self.published()
+            .filter(publish__gte=threshold_date)
+            .with_comment_counts()
+            .filter(comment_count__gte=min_comments)
+        )
+
+    def for_search_term(self, term):
+        return self.published().filter(
+            Q(title__icontains=term)
+            | Q(body__icontains=term)
+            | Q(tags__name__icontains=term)
+        ).distinct()
+
+    def editors_choice(self):
+        """Пример бизнес-правила: посты с тремя и более активными комментариями или с тегом 'featured'."""
+
+        return (
+            self.published()
+            .with_comment_counts()
+            .filter(
+                Q(comment_count__gte=3)
+                | Q(tags__slug__in=['featured', 'editor-choice'])
+            )
+            .distinct()
+        )
+
+
+class PostManager(models.Manager.from_queryset(PostQuerySet)):
+    pass
+
+
+class PublishedManager(PostManager):
     """Выбирает только опубликованные посты."""
 
     def get_queryset(self):
-        return super().get_queryset().filter(status=Post.Status.PUBLISHED)
+        return super().get_queryset().published()
 
 
 class Post(models.Model):
-    class Status(models.TextChoices):
-        DRAFT = 'DF', 'Черновик'
-        PUBLISHED = 'PB', 'Опубликован'
+    Status = PostStatus
 
     title = models.CharField('Заголовок', max_length=250)
     slug = models.SlugField('URL-метка', max_length=250, unique_for_date='publish')
@@ -57,7 +133,7 @@ class Post(models.Model):
         blank=True,
     )
 
-    objects = models.Manager()
+    objects = PostManager()
     published = PublishedManager()
 
     class Meta:

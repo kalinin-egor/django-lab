@@ -1,0 +1,58 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Поиск — {{ query|default:"Запрос" }}{% endblock %}
+
+{% block content %}
+<section class="card" style="margin-bottom: 32px;">
+    <h1>Поиск публикаций</h1>
+    <p class="meta">Введите ключевые слова, чтобы найти материалы по всему блогу.</p>
+    <form method="get" action="{% url 'blog:search' %}" style="display:flex; gap:12px; flex-wrap: wrap; align-items:center;">
+        {{ form.q }}
+        <button class="button" type="submit">Искать</button>
+        {% if query %}
+        <a class="button secondary" href="{% url 'blog:search' %}">Сбросить</a>
+        {% endif %}
+    </form>
+    {% if form.errors %}
+    <ul class="list-reset" style="margin-top:16px;">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}<li class="empty">{{ error }}</li>{% endfor %}
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+
+<section class="card">
+    <header>
+        <h2>Результаты</h2>
+        {% if query %}
+        <p class="meta">По запросу «{{ query }}» найдено: {{ results|length }} записей</p>
+        {% else %}
+        <p class="meta">Укажите поисковый запрос, чтобы увидеть результаты.</p>
+        {% endif %}
+    </header>
+    <ol class="list-reset">
+        {% for post in results %}
+        <li class="list-item">
+            <header>
+                <a href="{{ post.get_absolute_url }}"><strong>{{ post.title }}</strong></a>
+                <span class="meta">{{ post.publish|date:"d.m.Y" }}</span>
+            </header>
+            <p class="meta">Автор: {{ post.author.get_full_name|default:post.author.username }}</p>
+            <p>{{ post.body|truncatewords:35 }}</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% for tag in post.tags.all %}
+                <span class="tag-pill">#{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        </li>
+        {% empty %}
+        {% if query %}
+        <li class="empty">Ничего не найдено. Попробуйте уточнить запрос.</li>
+        {% else %}
+        <li class="empty">Пока нет результатов.</li>
+        {% endif %}
+        {% endfor %}
+    </ol>
+</section>
+{% endblock %}
