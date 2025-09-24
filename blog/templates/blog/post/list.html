@@ -9,6 +9,16 @@
     <header>
         <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
         <p class="meta">Published {{ post.publish }} by {{ post.author }}</p>
+        {% with tags=post.tags.all %}
+        {% if tags %}
+        <p class="tags">
+            Tags:
+            {% for tag in tags %}
+            <span>{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+        {% endwith %}
     </header>
     {{ post.body|truncatewords:30|linebreaks }}
 </article>
